@@ -22,6 +22,7 @@ Lets start by deploying a new namespace and an example pod so that we have somet
 
 ```yaml
 apiVersion: v1
+kind: Namespace
 metadata:
   name: hollow-namespace
   labels:
@@ -50,7 +51,9 @@ Now we’ve got a new namespace named “hollow-namespace” that we can use to 
 kubectl config current-context
 ```
 
-![](https://theithollow.com/wp-content/uploads/2019/01/k8scontext1-1024x54.png)
+```bash
+kubectl-to-cluster.local
+```
 
 Based on my setup my context is named kubernetes-admin@kubernetes. Lets take a closer look at the configuration by running:
 
@@ -58,7 +61,27 @@ Based on my setup my context is named kubernetes-admin@kubernetes. Lets take a c
 kubectl config view
 ```
 
-![](https://theithollow.com/wp-content/uploads/2019/01/k8scontext2-1024x682.png)
+```bash
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /etc/kubernetes/certs/ca.crt
+    server: https://198.150.0.8:8080
+  name: cluster.local
+contexts:
+- context:
+    cluster: cluster.local
+    user: kubectl
+  name: kubectl-to-cluster.local
+current-context: kubectl-to-cluster.local
+kind: Config
+preferences: {}
+users:
+- name: kubectl
+  user:
+    client-certificate: /etc/kubernetes/certs/kubecfg.crt
+    client-key: /etc/kubernetes/certs/kubecfg.key
+```
 
 The output from the previous command shows us a good deal of detail about our current configuration. In fact, you can probably find this same information if you open your KUBECONFIG file in a text editor. **NOTE:** the KUBECONFIG file is probably not named “kubeconfig”. Mine was named admin.conf but the name isn’t really important.
 
@@ -74,7 +97,32 @@ You can create your own context name and change the namespace as you see fit. Si
 
 Once we’ve set a new context, we can re-run the “config view” command to see if our context changed at all. You should see the context section has been updated.
 
-![](https://theithollow.com/wp-content/uploads/2019/01/k8scontext3-2-1024x855.png)
+```bash
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /etc/kubernetes/certs/ca.crt
+    server: https://198.150.0.8:8080
+  name: cluster.local
+contexts:
+- context:
+    cluster: cluster.local
+    user: kubectl
+  name: kubectl-to-cluster.local
+- context:
+    cluster: kubernetes
+    namespace: hollow-namespace
+    user: kubernetes-admin
+  name: theithollow
+current-context: kubectl-to-cluster.local
+kind: Config
+preferences: {}
+users:
+- name: kubectl
+  user:
+    client-certificate: /etc/kubernetes/certs/kubecfg.crt
+    client-key: /etc/kubernetes/certs/kubecfg.key
+```
 
 So if we run our get pods right now, we shouldn’t see any pods because we’re still in the default namespace. Let’s change our context so that we’re using the new namespace. In my case the hollow-namespace. Then we’ll view our current-context again after changing the context in use.
 
@@ -96,8 +144,6 @@ kubectl config use-context kubernetes-admin@kubernetes
 kubectl config unset contexts.theithollow #replace theithollow with your context name
 kubectl delete -f [manifest name].yml #Manifest is the file used to deploy the namespace and the naked pod.
 ```
-
-
 
 ## Reference
 
